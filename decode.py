@@ -3,6 +3,7 @@
 import os
 import sys
 import numpy as np
+import wave
 
 def sample_falling(clk, data):
 	falling = (clk[:-1] & ~clk[1:]).astype(np.bool)
@@ -50,4 +51,12 @@ if __name__ == '__main__':
 	filtered = np.convolve(samples, h)
 	filtered -= filtered.mean()
 
-	filtered[::D].astype(np.float32).tofile(f"{inname}-f32-{fd:.0f}.raw")
+	output = filtered[::D]
+
+	output.astype(np.float32).tofile(f"{inname}-f32-{fd:.0f}.raw")
+
+	with wave.open(f"{inname}-f32-{fd:.0f}.wav", mode='w') as fh:
+		fh.setnchannels(1)
+		fh.setsampwidth(2)
+		fh.setframerate(fd) # decimated sample rate
+		fh.writeframes((output * 2**15).astype(np.int16))
